@@ -2,6 +2,8 @@
 namespace App\Http\Traits;
 
 
+use function PHPUnit\Framework\isNull;
+
 trait DataTrait{
 
     public function getUser($update)
@@ -22,6 +24,9 @@ trait DataTrait{
             $checkUser = $this->usersModel::where('user_id', $user_id)->first();
             $txt = "*Yangi foydalanuvchi: \n\n📝 Ism: {$name}\n🆔 ID: *`{$user_id}`*\n\n@{$this->botUser}*";
             $this->sendMessage($this->botDev, $txt, ['parse_mode' => 'markdown']);
+        }
+        if (!isNull($checkUser->deleted_at)){
+            $this->updateUser($checkUser->user_id, ['deleted_at' => Carbon::now()->format('Y-m-d H:i:s')]);
         }
         return $checkUser;
     }

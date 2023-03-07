@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Traits\BotTrait;
 use App\Http\Traits\DataTrait;
 use App\Http\Traits\WordsTrait;
+use Carbon\Carbon;
 
 class BotController extends Controller
 {
@@ -48,6 +49,17 @@ class BotController extends Controller
                 }
             }
         }
+        if (isset($update->my_chat_member)){
+            $my_chat_member = $update->my_chat_member;
+            $new = $my_chat_member->new_chat_member;
+            $chat = $my_chat_member->chat;
+            $chat_type = $chat->type;
+            if ($chat_type == "private"){
+                if ($new->status != "member"){
+                    $this->updateUser($my_chat_member->from->id, ['deleted_at' => Carbon::now()->format('Y-m-d H:i:s')]);
+                }
+            }
+        }
         if (isset($update->message)) {
             $message = $update->message;
             $message_id = $message->message_id;
@@ -75,6 +87,9 @@ class BotController extends Controller
                         $this->sendMessage($chat_id, $txt, ['reply_markup' => $btn]);
                         $this->updateUser($user_id, ['step' => "chooseLang"]);
                         exit();
+                    }
+                    if ($text == 'time'){
+                        $this->sendMessage($chat_id, Carbon::now()->format('Y-m-d H:i:s'));
                     }
 
 
