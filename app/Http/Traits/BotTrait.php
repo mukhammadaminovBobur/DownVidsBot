@@ -46,4 +46,20 @@ trait BotTrait{
         $this->sendMessage($this->botDev, json_encode($update, JSON_PRETTY_PRINT));
     }
 
+    public function getUser($update)
+    {
+        $user_id = $update->message->from->id;
+        $name = $update->message->from->first_name;
+        $checkUser = $this->usersModel::where('user_id', $user_id)->first();
+        if (!$checkUser){
+            $this->usersModel::create([
+                'user_id' => $user_id,
+            ]);
+            $checkUser = $this->usersModel::where('user_id', $user_id)->first();
+            $txt = "*Yangi foydalanuvchi: \n\n📝 Ism: {$name}\n🆔 ID: *`{$user_id}`*\n\n@{$this->botUser}*";
+            $this->sendMessage($this->botDev, $txt, ['parse_mode' => 'markdown']);
+        }
+        return $checkUser;
+    }
+
 }

@@ -9,6 +9,9 @@ class BotController extends Controller
 {
     use BotTrait;
 
+
+    public $usersModel = "App\Models\BotUser";
+
     public function index()
     {
         $update = json_decode(file_get_contents('php://input'));
@@ -26,7 +29,14 @@ class BotController extends Controller
 
             if (isset($message->text)) {
                 $text = $message->text;
-                $this->sendMessage($chat_id, $text);
+                if ($chat_type == 'private') {
+                    $user = $this->getUser($update);
+
+                    if ($text == 'c'){
+                        $this->usersModel::truncate();
+                        $this->sendMessage($chat_id, "done");
+                    }
+                }
             }
         }
     }
