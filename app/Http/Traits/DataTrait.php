@@ -28,8 +28,6 @@ trait DataTrait{
         }
         if ($checkUser->deleted_at != null){
             $this->updateUser($checkUser->user_id, ['deleted_at' => null]);
-        }else{
-            $this->json(false);
         }
         return $checkUser;
     }
@@ -56,6 +54,9 @@ trait DataTrait{
             $checkGroup = $this->groupsModel::where('group_id', $chat_id)->first();
             $txt = "*Yangi guruh: \n\n📝 Nomi: {$chat_title}\n🆔 ID: *`{$chat_id}`*\n\n@{$this->botUser}*";
             $this->sendMessage($this->botDev, $txt, ['parse_mode' => 'markdown']);
+        }
+        if ($checkGroup->deleted_at != null){
+            $this->updateGroup($checkGroup->group_id, ['deleted_at' => null]);
         }
         return $checkGroup;
     }

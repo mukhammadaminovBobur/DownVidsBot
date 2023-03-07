@@ -71,6 +71,11 @@ class BotController extends Controller
                     $this->updateUser($my_chat_member->from->id, ['deleted_at' => Carbon::now()->format('Y-m-d H:i:s')]);
                 }
             }
+            if ($chat_type == "group" or $chat_type == "supergroup"){
+                if ($new->status != "member"){
+                    $this->updateGroup($my_chat_member->chat->id, ['deleted_at' => Carbon::now()->format('Y-m-d H:i:s')]);
+                }
+            }
         }
         if (isset($update->message)) {
             $message = $update->message;
