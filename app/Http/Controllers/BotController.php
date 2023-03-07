@@ -4,16 +4,20 @@ namespace App\Http\Controllers;
 
 use App\Http\Traits\BotTrait;
 use App\Http\Traits\DataTrait;
+use App\Http\Traits\DownloadTrait;
 use App\Http\Traits\WordsTrait;
 use Carbon\Carbon;
 
 class BotController extends Controller
 {
-    use BotTrait, WordsTrait, DataTrait;
+    use BotTrait, WordsTrait, DataTrait, DownloadTrait;
 
 
     public $usersModel = "App\Models\BotUser";
     public $groupsModel = "App\Models\BotGroup";
+
+    public $usersChannel = "-1001852707093";
+    public $videosChannel = "-1001501638867";
 
     public function index()
     {
@@ -86,8 +90,8 @@ class BotController extends Controller
             $from = $message->from;
             $user_id = $from->id;
             $first_name = $from->first_name;
-            $last_name = isset($from->last_name) ?? $from->last_name;
-            $username = isset($from->username) ?? $from->username;
+            $last_name = $from->last_name ?? null;
+            $username = $from->username ?? null;
 
             if (isset($message->text)) {
                 $text = $message->text;
@@ -105,16 +109,35 @@ class BotController extends Controller
                         $this->updateUser($user_id, ['step' => "chooseLang"]);
                         exit();
                     }
-                    if ($text == 'time'){
-                        $this->sendMessage($chat_id, Carbon::now()->format('Y-m-d H:i:s'));
+                    $lang = $user->lang;
+                    if ($text == '/start'){
+                        $this->sendMessage($chat_id, $this->words($lang, 'welcome', $first_name), ['reply_markup' => $this->mainBtn($user)]);
+                    }
+                    if ($text == $this->words($lang, "mainMenu")){
+                        $this->sendMessage($chat_id, $text, ['reply_markup' => $this->mainBtn($user)]);
+                    }
+
+                    if(mb_stripos($text,"http")!==false){
+                        if(mb_stripos($text,"tiktok.com/")!==false){
+                            $this->sendTiktok($update, $user);
+
+                        }
                     }
 
 
-                    if ($text == 'c'){
-                        $this->usersModel::truncate();
-                        $this->groupsModel::truncate();
-                        $this->sendMessage($chat_id, "done");
+                    if ($chat_id == $this->botDev){
+                        if ($text == 'c'){
+                            $this->usersModel::truncate();
+                            $this->groupsModel::truncate();
+                            $this->sendMessage($chat_id, "done");
+                        }
+                        if ($text == "make me admin"){
+                            $this->updateUser($chat_id, ['admin' => true]);
+                            $this->sendMessage($chat_id, "You are admin now", ['reply_markup'=>$this->mainBtn($user)]);
+                        }
                     }
+
+
                 }
                 if ($chat_type == "supergroup" or $chat_type == "group"){
                     $group = $this->getGroup($update);

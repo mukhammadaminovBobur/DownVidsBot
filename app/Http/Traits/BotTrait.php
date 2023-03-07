@@ -15,21 +15,20 @@ trait BotTrait{
         $this->botDev = config('bot.dev');
     }
 
-    public function getRequest($url, $data)
-    {
-        $response = Http::post($url, $data);
-        if ($response->ok()) {
-            return $response->json();
-        } else {
-            $status = $response->status();
-            $message = $response->body();
-            $this->json(json_decode($message));
-//            $this->sendMessage($this->botDev, $message);
-        }
-    }
     public function bot($method, $data = []){
         $url = "https://api.telegram.org/bot".$this->botToken."/" . $method;
-        return $this->getRequest($url, $data);
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+        $res = curl_exec($ch);
+        if (curl_error($ch)) {
+            $this->json(curl_error($ch));
+            return true;
+        } else {
+            http_response_code(200);
+            return json_decode($res);
+        }
     }
     public function sendMessage($chat_id, $text, $extra = [])
     {
@@ -55,6 +54,40 @@ trait BotTrait{
                 ]);
             }
         }
+    }
+    public function sendPhoto($chat_id, $photo, $extra = [])
+    {
+        return $this->bot('sendPhoto', array_merge(
+            [
+                'chat_id' => $chat_id,
+                'photo' => $photo,
+            ], $extra
+        ));
+    }
+    public function sendVideo($chat_id, $video, $extra = [])
+    {
+        return $this->bot('sendVideo', array_merge(
+            [
+                'chat_id' => $chat_id,
+                'video' => $video,
+            ], $extra
+        ));
+    }
+    public function sendAudio($chat_id, $audio, $extra = [])
+    {
+        return $this->bot('sendAudio', array_merge(
+            [
+                'chat_id' => $chat_id,
+                'audio' => $audio,
+            ], $extra
+        ));
+    }
+    public function sendChatAction($chat_id, $action)
+    {
+        return $this->bot('sendChatAction', [
+            'chat_id' => $chat_id,
+            'action' => $action,
+        ]);
     }
 
     public function inlineKeyboard($array = [])
