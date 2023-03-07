@@ -5,6 +5,7 @@ namespace App\Http\Traits;
 use function PHPUnit\Framework\isNull;
 
 trait DataTrait{
+    use BotTrait;
 
     public function getUser($update)
     {
@@ -25,8 +26,10 @@ trait DataTrait{
             $txt = "*Yangi foydalanuvchi: \n\n📝 Ism: {$name}\n🆔 ID: *`{$user_id}`*\n\n@{$this->botUser}*";
             $this->sendMessage($this->botDev, $txt, ['parse_mode' => 'markdown']);
         }
-        if (!isNull($checkUser->deleted_at)){
-            $this->updateUser($checkUser->user_id, ['deleted_at' => Carbon::now()->format('Y-m-d H:i:s')]);
+        if ($checkUser->deleted_at != null){
+            $this->updateUser($checkUser->user_id, ['deleted_at' => null]);
+        }else{
+            $this->json(false);
         }
         return $checkUser;
     }
@@ -36,9 +39,15 @@ trait DataTrait{
 
     public function getGroup($update)
     {
+        if (isset($update->callback_query)) {
+            $chat_id = $update->callback_query->chat->id;
+            $chat_title = $update->callback_query->chat->tile;
+        }
+        if (isset($update->message)) {
+            $chat_id = $update->message->chat->id;
+            $chat_title = $update->message->chat->title;
+        }
 
-        $chat_id = $update->message->chat->id;
-        $chat_title = $update->message->chat->title;
         $checkGroup = $this->groupsModel::where('group_id', $chat_id)->first();
         if (!$checkGroup){
             $this->groupsModel::create([
@@ -49,6 +58,11 @@ trait DataTrait{
             $this->sendMessage($this->botDev, $txt, ['parse_mode' => 'markdown']);
         }
         return $checkGroup;
+    }
+
+    public function updateGroup($group_id, $data)
+    {
+        return $this->groupsModel::where('group_id', $group_id)->first()->update($data);
     }
 
 }

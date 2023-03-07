@@ -29,21 +29,33 @@ class BotController extends Controller
             $callback_chat_id = $callback_chat->id;
             $callback_name = $callback_from->first_name;
 
-            if ($callback_message && $callback_chat->type == "private") {
-                $user = $this->getUser($update);
-
+            if ($callback_message){
                 $ex = explode('_', $callback_data);
-                if (count($ex) == 2){
-                    if ($ex[0] == 'setLang'){
+                if (count($ex) == 2) {
+                    if ($ex[0] == 'setLang') {
                         $lang = $ex[1];
-                        $this->updateUser($callback_from_id, ['lang' => $lang]);
-                        $this->deleteMessage($callback_chat_id, $callback_message_id);
-                        if ($user->step == "chooseLang"){
-                            $this->sendMessage($callback_chat_id, $this->words($lang, 'welcome', $callback_name), ['reply_markup' => $this->mainBtn($user)]);
-                        }else{
-                            $this->sendMessage($callback_chat_id, $this->words($lang, "languageSet"), ['reply_markup' => $this->mainBtn($user)]);
+                        if ($callback_chat->type == "private") {
+                            $user = $this->getUser($update);
+                            $this->updateUser($callback_from_id, ['lang' => $lang]);
+                            $this->deleteMessage($callback_chat_id, $callback_message_id);
+                            if ($user->step == "chooseLang"){
+                                $this->sendMessage($callback_chat_id, $this->words($lang, 'welcome', $callback_name), ['reply_markup' => $this->mainBtn($user)]);
+                            }else{
+                                $this->sendMessage($callback_chat_id, $this->words($lang, "languageSet"), ['reply_markup' => $this->mainBtn($user)]);
+                            }
+                            $this->updateUser($callback_from_id, ['step' => 'langSet']);
                         }
-                        $this->updateUser($callback_from_id, ['step' => 'langSet']);
+                        if ($callback_chat->type == "group" or $callback_chat->type == "supergroup"){
+                            $group = $this->getGroup($update);
+                            $this->updateGroup($callback_chat_id, ['lang' => $lang]);
+                            $this->deleteMessage($callback_chat_id, $callback_message_id);
+                            if ($group->step == "chooseLang"){
+                                $this->sendMessage($callback_chat_id, $this->words($lang, 'groupWelcome'));
+                            }else{
+                                $this->sendMessage($callback_chat_id, $this->words($lang, "languageSet"));
+                            }
+                            $this->updateGroup($callback_chat_id, ['step' => "langSet"]);
+                        }
 
                     }
                 }
@@ -101,7 +113,17 @@ class BotController extends Controller
                 }
                 if ($chat_type == "supergroup" or $chat_type == "group"){
                     $group = $this->getGroup($update);
-                    $this->sendMessage($chat_id, "hello");
+                    if (!$group->lang){
+                        $txt = $this->words('en', 'chooseLang');
+                        $btn = $this->inlineKeyboard([
+                            [$this->words('en', 'english')."-setLang_en"],
+                            [$this->words('en', 'russian')."-setLang_ru"],
+                            [$this->words('en', 'uzbek')."-setLang_uz"],
+                        ]);
+                        $this->sendMessage($chat_id, $txt, ['reply_markup' => $btn, 'reply_to_message_id' => $message_id]);
+                        $this->updateGroup($chat_id, ['step' => "chooseLang"]);
+                        exit();
+                    }
                 }
             }
         }
