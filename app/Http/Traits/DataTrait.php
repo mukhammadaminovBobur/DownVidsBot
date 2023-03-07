@@ -38,8 +38,8 @@ trait DataTrait{
     public function getGroup($update)
     {
         if (isset($update->callback_query)) {
-            $chat_id = $update->callback_query->chat->id;
-            $chat_title = $update->callback_query->chat->tile;
+            $chat_id = $update->callback_query->message->chat->id;
+            $chat_title = $update->callback_query->message->chat->title;
         }
         if (isset($update->message)) {
             $chat_id = $update->message->chat->id;

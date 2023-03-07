@@ -50,7 +50,7 @@ class BotController extends Controller
                             $this->updateGroup($callback_chat_id, ['lang' => $lang]);
                             $this->deleteMessage($callback_chat_id, $callback_message_id);
                             if ($group->step == "chooseLang"){
-                                $this->sendMessage($callback_chat_id, $this->words($lang, 'groupWelcome'));
+                                $this->sendMessage($callback_chat_id, $this->words($lang, 'groupWelcome'), ['parse_mode' => "markdown"]);
                             }else{
                                 $this->sendMessage($callback_chat_id, $this->words($lang, "languageSet"));
                             }
