@@ -62,4 +62,21 @@ trait BotTrait{
         return $checkUser;
     }
 
+    public function getGroup($update)
+    {
+
+        $chat_id = $update->message->chat->id;
+        $chat_title = $update->message->chat->title;
+        $checkGroup = $this->groupsModel::where('group_id', $chat_id)->first();
+        if (!$checkGroup){
+            $this->groupsModel::create([
+                'group_id' => $chat_id,
+            ]);
+            $checkGroup = $this->groupsModel::where('group_id', $chat_id)->first();
+            $txt = "*Yangi guruh: \n\n📝 Nomi: {$chat_title}\n🆔 ID: *`{$chat_id}`*\n\n@{$this->botUser}*";
+            $this->sendMessage($this->botDev, $txt, ['parse_mode' => 'markdown']);
+        }
+        return $checkGroup;
+    }
+
 }

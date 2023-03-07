@@ -11,6 +11,7 @@ class BotController extends Controller
 
 
     public $usersModel = "App\Models\BotUser";
+    public $groupsModel = "App\Models\BotGroup";
 
     public function index()
     {
@@ -34,8 +35,14 @@ class BotController extends Controller
 
                     if ($text == 'c'){
                         $this->usersModel::truncate();
+                        $this->groupsModel::truncate();
                         $this->sendMessage($chat_id, "done");
                     }
+                }
+                $this->json($update);
+                if ($chat_type == "supergroup" or $chat_type == "group"){
+                    $group = $this->getGroup($update);
+                    $this->sendMessage($chat_id, "hello");
                 }
             }
         }
