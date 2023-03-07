@@ -3,11 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Http\Traits\BotTrait;
-use Illuminate\Support\Facades\Http;
+use App\Http\Traits\DataTrait;
+use App\Http\Traits\WordsTrait;
 
 class BotController extends Controller
 {
-    use BotTrait;
+    use BotTrait, WordsTrait, DataTrait;
 
 
     public $usersModel = "App\Models\BotUser";
@@ -16,6 +17,37 @@ class BotController extends Controller
     public function index()
     {
         $update = json_decode(file_get_contents('php://input'));
+        if (isset($update->callback_query)) {
+            $callback = $update->callback_query;
+            $callback_data = $callback->data;
+            $callback_from = $callback->from;
+            $callback_from_id = $callback_from->id;
+            $callback_message = $callback->message;
+            $callback_message_id = $callback_message->message_id;
+            $callback_chat = $callback_message->chat;
+            $callback_chat_id = $callback_chat->id;
+            $callback_name = $callback_from->first_name;
+
+            if ($callback_message && $callback_chat->type == "private") {
+                $user = $this->getUser($update);
+
+                $ex = explode('_', $callback_data);
+                if (count($ex) == 2){
+                    if ($ex[0] == 'setLang'){
+                        $lang = $ex[1];
+                        $this->updateUser($callback_from_id, ['lang' => $lang]);
+                        $this->deleteMessage($callback_chat_id, $callback_message_id);
+                        if ($user->step == "chooseLang"){
+                            $this->sendMessage($callback_chat_id, $this->words($lang, 'welcome', $callback_name), ['reply_markup' => $this->mainBtn($user)]);
+                        }else{
+                            $this->sendMessage($callback_chat_id, $this->words($lang, "languageSet"), ['reply_markup' => $this->mainBtn($user)]);
+                        }
+                        $this->updateUser($callback_from_id, ['step' => 'langSet']);
+
+                    }
+                }
+            }
+        }
         if (isset($update->message)) {
             $message = $update->message;
             $message_id = $message->message_id;
@@ -33,18 +65,44 @@ class BotController extends Controller
                 if ($chat_type == 'private') {
                     $user = $this->getUser($update);
 
+                    if (!$user->lang){
+                        $txt = $this->words('en', 'chooseLang');
+                        $btn = $this->inlineKeyboard([
+                            [$this->words('en', 'english')."-setLang_en"],
+                            [$this->words('en', 'russian')."-setLang_ru"],
+                            [$this->words('en', 'uzbek')."-setLang_uz"],
+                        ]);
+                        $this->sendMessage($chat_id, $txt, ['reply_markup' => $btn]);
+                        $this->updateUser($user_id, ['step' => "chooseLang"]);
+                        exit();
+                    }
+
+
                     if ($text == 'c'){
                         $this->usersModel::truncate();
                         $this->groupsModel::truncate();
                         $this->sendMessage($chat_id, "done");
                     }
                 }
-                $this->json($update);
                 if ($chat_type == "supergroup" or $chat_type == "group"){
                     $group = $this->getGroup($update);
                     $this->sendMessage($chat_id, "hello");
                 }
             }
+        }
+    }
+
+    public function mainBtn($user)
+    {
+        if ($user->admin){
+            return $this->buttonKeyboard([
+                [$this->words($user->lang, 'statistic'), $this->words($user->lang, 'settings')],
+                [$this->words($user->lang, 'adminPanel')]
+            ]);
+        }else{
+            return $this->buttonKeyboard([
+                [$this->words($user->lang, 'statistic'), $this->words($user->lang, 'settings')],
+            ]);
         }
     }
 }

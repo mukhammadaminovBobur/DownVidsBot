@@ -23,9 +23,8 @@ trait BotTrait{
         } else {
             $status = $response->status();
             $message = $response->body();
-//            $this->json(gettype(json_decode($message)));
             $this->json(json_decode($message));
-            $this->sendMessage($this->botDev, $message);
+//            $this->sendMessage($this->botDev, $message);
         }
     }
     public function bot($method, $data = []){
@@ -41,42 +40,59 @@ trait BotTrait{
             ], $extra
         ));
     }
+    public function deleteMessage($chat_id, $message_ids = [])
+    {
+        if (gettype($message_ids) == "integer"){
+            $this->bot('deleteMessage', [
+                'chat_id' => $chat_id,
+                'message_id' => $message_ids,
+            ]);
+        }else{
+            foreach ($message_ids as $message_id){
+                $this->bot('deleteMessage', [
+                    'chat_id' => $chat_id,
+                    'message_id' => $message_id,
+                ]);
+            }
+        }
+    }
+
+    public function inlineKeyboard($array = [])
+    {
+        $keys = [];
+        foreach ($array as $arr){
+            $inKeys = [];
+            foreach ($arr as $ar){
+                $ex = explode('-', $ar);
+                $inKeys[] = ['text' => $ex[0], 'callback_data' => $ex[1]];
+            }
+            $keys[] = $inKeys;
+        }
+        return json_encode([
+            "inline_keyboard" => $keys
+        ]);
+    }
+    public function buttonKeyboard($array = [])
+    {
+        $keys = [];
+        foreach ($array as $arr){
+            $inKeys = [];
+            foreach ($arr as $ar){
+                $inKeys[] = ['text' => $ar];
+            }
+            $keys[] = $inKeys;
+        }
+        return json_encode([
+            "resize_keyboard" => true,
+            "keyboard" => $keys
+        ]);
+    }
+
     public function json($update)
     {
         $this->sendMessage($this->botDev, json_encode($update, JSON_PRETTY_PRINT));
     }
 
-    public function getUser($update)
-    {
-        $user_id = $update->message->from->id;
-        $name = $update->message->from->first_name;
-        $checkUser = $this->usersModel::where('user_id', $user_id)->first();
-        if (!$checkUser){
-            $this->usersModel::create([
-                'user_id' => $user_id,
-            ]);
-            $checkUser = $this->usersModel::where('user_id', $user_id)->first();
-            $txt = "*Yangi foydalanuvchi: \n\n📝 Ism: {$name}\n🆔 ID: *`{$user_id}`*\n\n@{$this->botUser}*";
-            $this->sendMessage($this->botDev, $txt, ['parse_mode' => 'markdown']);
-        }
-        return $checkUser;
-    }
 
-    public function getGroup($update)
-    {
-
-        $chat_id = $update->message->chat->id;
-        $chat_title = $update->message->chat->title;
-        $checkGroup = $this->groupsModel::where('group_id', $chat_id)->first();
-        if (!$checkGroup){
-            $this->groupsModel::create([
-                'group_id' => $chat_id,
-            ]);
-            $checkGroup = $this->groupsModel::where('group_id', $chat_id)->first();
-            $txt = "*Yangi guruh: \n\n📝 Nomi: {$chat_title}\n🆔 ID: *`{$chat_id}`*\n\n@{$this->botUser}*";
-            $this->sendMessage($this->botDev, $txt, ['parse_mode' => 'markdown']);
-        }
-        return $checkGroup;
-    }
 
 }
