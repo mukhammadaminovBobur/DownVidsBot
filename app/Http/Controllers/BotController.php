@@ -97,6 +97,61 @@ class BotController extends Controller
                             'reply_markup' => $btn
                         ]);
                     }
+
+                    if (count($ex) == 2){
+                        if ($ex[0] == "music"){
+                            if ($ex[1] == "on"){
+                                $music = true;
+                                $txt = $this->words($lang, "musicOnText");
+                                $musicBtn = ["{$this->words($lang, 'musicOn')}-music_off"];
+                            } else{
+                                $music = false;
+                                $txt = $this->words($lang, "musicOffText");
+                                $musicBtn = ["{$this->words($lang, 'musicOff')}-music_on"];
+                            }
+                            $btn = $this->inlineKeyboard([
+                                ["{$this->words($lang, 'changeLang')}-changeLang"],
+                                $musicBtn
+                            ]);
+
+                            $this->updateUser($callback_from_id, ['music' => $music]);
+                            $this->answerCallbackQuery($callback->id, $txt, true);
+                            $this->bot('editMessageReplyMarkup', [
+                                'chat_id' => $callback_chat_id,
+                                'message_id' => $callback_message_id,
+                                'reply_markup' => $btn
+                            ]);
+                        }
+                    }
+                }
+                if ($callback_chat->type == "group" or $callback_chat->type == "supergroup") {
+                    $group = $this->getGroup($update);
+                    $lang = $group->lang;
+                    if (count($ex) == 2){
+                        if ($ex[0] == "music"){
+                            if ($ex[1] == "on"){
+                                $music = true;
+                                $txt = $this->words($lang, "musicOnText");
+                                $musicBtn = ["{$this->words($lang, 'musicOn')}-music_off"];
+                            } else{
+                                $music = false;
+                                $txt = $this->words($lang, "musicOffText");
+                                $musicBtn = ["{$this->words($lang, 'musicOff')}-music_on"];
+                            }
+                            $btn = $this->inlineKeyboard([
+                                ["{$this->words($lang, 'changeLang')}-changeLang"],
+                                $musicBtn
+                            ]);
+
+                            $this->updateGroup($callback_chat_id, ['music' => $music]);
+                            $this->answerCallbackQuery($callback->id, $txt, true);
+                            $this->bot('editMessageReplyMarkup', [
+                                'chat_id' => $callback_chat_id,
+                                'message_id' => $callback_message_id,
+                                'reply_markup' => $btn
+                            ]);
+                        }
+                    }
                 }
             }
         }

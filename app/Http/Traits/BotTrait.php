@@ -89,6 +89,14 @@ trait BotTrait{
             'action' => $action,
         ]);
     }
+    public function answerCallbackQuery($callback_query_id, $text, $alert = false)
+    {
+        $this->bot('answerCallbackQuery', [
+            "callback_query_id" => $callback_query_id,
+            "text" => $text,
+            "show_alert" => $alert,
+        ]);
+    }
 
     public function inlineKeyboard($array = [])
     {
