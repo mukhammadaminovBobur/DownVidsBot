@@ -15,6 +15,7 @@ class BotController extends Controller
 
     public $usersModel = "App\Models\BotUser";
     public $groupsModel = "App\Models\BotGroup";
+    public $tiktoksModel = "App\Models\TiktokPost";
 
     public $usersChannel = "-1001852707093";
     public $videosChannel = "-1001501638867";
@@ -125,6 +126,10 @@ class BotController extends Controller
                     }
 
 
+                    if ($text == "stat"){
+                        $totalVideos = $this->tiktoksModel::sum('downloads');
+                        $this->sendMessage($chat_id, $totalVideos);
+                    }
                     if ($chat_id == $this->botDev){
                         if ($text == 'c'){
                             $this->usersModel::truncate();
