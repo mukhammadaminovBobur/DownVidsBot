@@ -48,6 +48,7 @@ class BotController extends Controller
                             if ($user->step == "chooseLang"){
                                 $this->sendMessage($callback_chat_id, $this->words($lang, 'welcome', $callback_name), ['reply_markup' => $this->mainBtn($user)]);
                             }else{
+                                $user->{'lang'} = $lang;
                                 $this->sendMessage($callback_chat_id, $this->words($lang, "languageSet"), ['reply_markup' => $this->mainBtn($user)]);
                             }
                             $this->updateUser($callback_from_id, ['step' => 'langSet']);
@@ -80,6 +81,20 @@ class BotController extends Controller
                             'text' => $txt,
                             'reply_markup' => $btn,
                             'parse_mode' => 'markdown'
+                        ]);
+                    }
+                    if ($callback_data == "changeLang"){
+                        $txt = $this->words($lang, 'chooseLang');
+                        $btn = $this->inlineKeyboard([
+                            [$this->words('en', 'english')."-setLang_en"],
+                            [$this->words('en', 'russian')."-setLang_ru"],
+                            [$this->words('en', 'uzbek')."-setLang_uz"],
+                        ]);
+                        $this->bot('editMessageText', [
+                            'chat_id' => $callback_chat_id,
+                            'message_id' => $callback_message_id,
+                            'text' => $txt,
+                            'reply_markup' => $btn
                         ]);
                     }
                 }
@@ -142,6 +157,14 @@ class BotController extends Controller
                             ["{$this->words($lang, 'refresh')}-statistics"]
                         ]);
                         $this->sendMessage($chat_id, $txt, ['reply_markup' => $btn, 'parse_mode' => 'markdown']);
+                    }
+                    if ($text == $this->words($lang, "settings") or $text == "/settings"){
+                        $user->music ? $music = ["{$this->words($lang, 'musicOn')}-music_off"] : $music = ["{$this->words($lang, 'musicOff')}-music_on"];
+                        $btn = $this->inlineKeyboard([
+                            ["{$this->words($lang, 'changeLang')}-changeLang"],
+                            $music
+                        ]);
+                        $this->sendMessage($chat_id, $this->words($lang, "settings"), ['reply_markup' => $btn]);
                     }
 
 
