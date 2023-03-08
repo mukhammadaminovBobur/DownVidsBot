@@ -2,10 +2,33 @@
 namespace App\Http\Traits;
 
 
+use Carbon\Carbon;
 use function PHPUnit\Framework\isNull;
 
 trait DataTrait{
     use BotTrait;
+
+    public function statistic($lang)
+    {
+
+    }
+    public function statistics($lang)
+    {
+        $usersCount = $this->usersModel::count();
+        $usersCount24Hours = $this->usersModel::where('created_at', ">=", Carbon::now()->subDay())->count();
+        $usersCountLastMonth = $this->usersModel::where('created_at', ">=", Carbon::now()->subMonth())->count();
+
+        $groupsCount = $this->groupsModel::count();
+        $groupsCount24Hours = $this->groupsModel::where('created_at', ">=", Carbon::now()->subDay())->count();
+        $groupsCountLastMonth = $this->groupsModel::where('created_at', ">=", Carbon::now()->subMonth())->count();
+
+        $tiktoksCount = $this->tiktoksModel::sum('downloads');
+        $instagramCount = 0;
+
+        $space = "    ";
+        $now = Carbon::now();
+        return "*{$this->words($lang, 'botSubs')}: {$usersCount} \n{$space}{$this->words($lang, 'last24h')}: {$usersCount24Hours}\n{$space}{$this->words($lang, 'lastMonth')}: {$usersCountLastMonth}\n\n {$this->words($lang, 'totalGroups')}: {$groupsCount} \n{$space}{$this->words($lang, 'last24h')}: {$groupsCount24Hours}\n{$space}{$this->words($lang, 'lastMonth')}: {$groupsCountLastMonth}\n\n {$this->words($lang, 'tiktokPosts')}: {$tiktoksCount} \n {$this->words($lang, 'instagramPosts')}: {$instagramCount} \n\n{$this->words($lang, 'date')}: {$now}*";
+    }
 
     public function getUser($update)
     {

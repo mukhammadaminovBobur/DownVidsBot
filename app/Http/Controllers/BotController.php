@@ -35,6 +35,8 @@ class BotController extends Controller
             $callback_name = $callback_from->first_name;
 
             if ($callback_message){
+                $lang = 'en';
+
                 $ex = explode('_', $callback_data);
                 if (count($ex) == 2) {
                     if ($ex[0] == 'setLang') {
@@ -62,6 +64,23 @@ class BotController extends Controller
                             $this->updateGroup($callback_chat_id, ['step' => "langSet"]);
                         }
 
+                    }
+                }
+                if ($callback_chat->type == 'private'){
+                    $user = $this->getUser($update);
+                    $lang = $user->lang;
+                    if ($callback_data == "statistics"){
+                        $txt = $this->statistics($lang);
+                        $btn = $this->inlineKeyboard([
+                            ["{$this->words($lang, 'refresh')}-statistics"]
+                        ]);
+                        $this->bot('editMessageText', [
+                            'chat_id' => $callback_chat_id,
+                            'message_id' => $callback_message_id,
+                            'text' => $txt,
+                            'reply_markup' => $btn,
+                            'parse_mode' => 'markdown'
+                        ]);
                     }
                 }
             }
@@ -117,6 +136,14 @@ class BotController extends Controller
                     if ($text == $this->words($lang, "mainMenu")){
                         $this->sendMessage($chat_id, $text, ['reply_markup' => $this->mainBtn($user)]);
                     }
+                    if ($text == $this->words($lang, "statistic")){
+                        $txt = $this->statistics($lang);
+                        $btn = $this->inlineKeyboard([
+                            ["{$this->words($lang, 'refresh')}-statistics"]
+                        ]);
+                        $this->sendMessage($chat_id, $txt, ['reply_markup' => $btn, 'parse_mode' => 'markdown']);
+                    }
+
 
                     if(mb_stripos($text,"http")!==false){
                         if(mb_stripos($text,"tiktok.com/")!==false){

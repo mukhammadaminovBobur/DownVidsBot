@@ -143,10 +143,15 @@ trait WordsTrait{
                 "ru" => "🔝 Последний месяц",
                 "uz" => "🔝 O'tgan oy",
             ],
-            "totalVideos" => [
-                "en" => "📹Total videos",
-                "ru" => "📹Всего видео",
-                "uz" => "📹Barcha videolar",
+            "tiktokPosts" => [
+                "en" => "📹Tiktok posts",
+                "ru" => "📹Тикток посты",
+                "uz" => "📹Tiktok postlari",
+            ],
+            "instagramPosts" => [
+                "en" => "📹Instagram videos",
+                "ru" => "📹Инстаграм посты",
+                "uz" => "📹Instagram postlari",
             ],
             "date" => [
                 "en" => "📅 Date",
