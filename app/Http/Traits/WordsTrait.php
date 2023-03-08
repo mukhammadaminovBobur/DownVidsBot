@@ -39,9 +39,9 @@ trait WordsTrait{
                 "ru" => "Здравствуйте, {$name} 👋\nЯ бот для скачивания видео с тикток внутри телеграммы.\n\nЯ могу скачивать видео без водяных знаков. Просто пришлите мне ссылку на тикток."
             ],
             'groupWelcome' => [
-                "en" => "Hello 👋\nI'm a bot for downloading tiktok videos inside telegram.\n\nI can download video without watermark. Simply send me a tiktok url. Send `/settings` for settings",
-                "ru" => "Здравствуйте 👋\nЯ бот для скачивания видео с тикток внутри телеграммы.\n\nЯ могу скачивать видео без водяных знаков. Просто пришлите мне ссылку на тикток. Отправить `/settings` для настроек",
-                "uz" => "Assalomu alaykum 👋\nMen telegram ichidagi tiktok videolarni yuklab oladigan botman.\n\nVideolarni hech qanday belgisisiz yuklab olishim mumkin. Menga tiktok URL manzilini yuboring. Sozlamalar uchun `/settings` yuboring",
+                "en" => "Hello 👋\nI'm a bot for downloading tiktok videos inside telegram.\n\nI can download video without watermark. Simply send me a tiktok url. Send /settings for settings",
+                "ru" => "Здравствуйте 👋\nЯ бот для скачивания видео с тикток внутри телеграммы.\n\nЯ могу скачивать видео без водяных знаков. Просто пришлите мне ссылку на тикток. Отправить /settings для настроек",
+                "uz" => "Assalomu alaykum 👋\nMen telegram ichidagi tiktok videolarni yuklab oladigan botman.\n\nVideolarni hech qanday belgisisiz yuklab olishim mumkin. Menga tiktok URL manzilini yuboring. Sozlamalar uchun /settings yuboring",
             ],
             'back' => [
                 'en' => "Back🔙",

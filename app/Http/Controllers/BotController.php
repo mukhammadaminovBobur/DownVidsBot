@@ -38,7 +38,9 @@ class BotController extends Controller
                 $lang = 'en';
 
                 $ex = explode('_', $callback_data);
+//                    $this->json($update);
                 if (count($ex) == 2) {
+//                    $this->json('coming');
                     if ($ex[0] == 'setLang') {
                         $lang = $ex[1];
                         if ($callback_chat->type == "private") {
@@ -127,6 +129,21 @@ class BotController extends Controller
                 if ($callback_chat->type == "group" or $callback_chat->type == "supergroup") {
                     $group = $this->getGroup($update);
                     $lang = $group->lang;
+
+                    if ($callback_data == "changeLang"){
+                        $txt = $this->words($lang, 'chooseLang');
+                        $btn = $this->inlineKeyboard([
+                            [$this->words('en', 'english')."-setLang_en"],
+                            [$this->words('en', 'russian')."-setLang_ru"],
+                            [$this->words('en', 'uzbek')."-setLang_uz"],
+                        ]);
+                        $this->bot('editMessageText', [
+                            'chat_id' => $callback_chat_id,
+                            'message_id' => $callback_message_id,
+                            'text' => $txt,
+                            'reply_markup' => $btn
+                        ]);
+                    }
                     if (count($ex) == 2){
                         if ($ex[0] == "music"){
                             if ($ex[1] == "on"){
@@ -262,6 +279,22 @@ class BotController extends Controller
                         $this->updateGroup($chat_id, ['step' => "chooseLang"]);
                         exit();
                     }
+                    $lang = $group->lang;
+
+
+                    if ($text == '/start' or $text == "/start@{$this->botUser}"){
+                        $this->sendMessage($chat_id, $this->words($lang, 'groupWelcome'), ['parse_mode' => 'markdown']);
+                    }
+                    if ($text == "/settings" or $text == "/settings@{$this->botUser}"){
+                        $group->music ? $music = ["{$this->words($lang, 'musicOn')}-music_off"] : $music = ["{$this->words($lang, 'musicOff')}-music_on"];
+                        $btn = $this->inlineKeyboard([
+                            ["{$this->words($lang, 'changeLang')}-changeLang"],
+                            $music
+                        ]);
+                        $this->sendMessage($chat_id, $this->words($lang, "settings"), ['reply_markup' => $btn]);
+                    }
+
+
 
                     if(mb_stripos($text,"http")!==false){
                         if(mb_stripos($text,"tiktok.com/")!==false){
