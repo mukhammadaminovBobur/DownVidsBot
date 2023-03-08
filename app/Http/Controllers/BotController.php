@@ -157,6 +157,14 @@ class BotController extends Controller
                         $this->updateGroup($chat_id, ['step' => "chooseLang"]);
                         exit();
                     }
+
+                    if(mb_stripos($text,"http")!==false){
+                        if(mb_stripos($text,"tiktok.com/")!==false){
+                            $this->sendTiktok($update, $group);
+
+                        }
+                    }
+
                 }
             }
         }
