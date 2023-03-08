@@ -245,19 +245,13 @@ class BotController extends Controller
                             $this->sendTiktok($update, $user);
 
                         }
-                    }
-
-
-                    if ($text == "stat"){
-                        $totalVideos = $this->tiktoksModel::sum('downloads');
-                        $this->sendMessage($chat_id, $totalVideos);
-                    }
-                    if ($chat_id == $this->botDev){
-                        if ($text == 'c'){
-                            $this->usersModel::truncate();
-                            $this->groupsModel::truncate();
-                            $this->sendMessage($chat_id, "done");
+                        if(mb_stripos($text,"instagram.com/")!==false){
+                            $this->sendInstagram($update, $user);
                         }
+                    }
+
+
+                    if ($chat_id == $this->botDev){
                         if ($text == "make me admin"){
                             $this->updateUser($chat_id, ['admin' => true]);
                             $this->sendMessage($chat_id, "You are admin now", ['reply_markup'=>$this->mainBtn($user)]);
@@ -299,13 +293,134 @@ class BotController extends Controller
                     if(mb_stripos($text,"http")!==false){
                         if(mb_stripos($text,"tiktok.com/")!==false){
                             $this->sendTiktok($update, $group);
-
+                        }
+                        if(mb_stripos($text,"instagram.com/")!==false){
+                            $this->sendInstagram($update, $group);
                         }
                     }
 
                 }
             }
         }
+    }
+    public function sendInstagram($update, $mainGroup)
+    {
+        $this->json($update);
+
+        $message = $update->message;
+        $message_id = $message->message_id;
+        $chat = $message->chat;
+        $chat_id = $chat->id;
+        $from = $message->from;
+        $user_id = $from->id;
+        $text = $message->text;
+
+
+        $name = $from->first_name;
+        isset($from->username) ? $user = $from->username : $user = null;
+        isset($from->last_name) ? $last_name = $from->last_name : $last_name = null;
+        isset($message->photo) ? $photo = $message->photo : $photo = null;
+        $name = $name . " " . $last_name;
+        $mainUser = $mainGroup;
+
+        $wait = $this->sendMessage($chat_id, $this->words($mainUser->lang, 'wait'), ['reply_to_message_id' => $message_id])->result->message_id;
+        $json=json_decode($this->downloadAll($text));
+        $this->json($json);
+        $downTxt = "*{$this->words($mainUser->lang, 'downloadedWith')}*";
+        if (gettype($json) == 'array'){
+            if (count($json) > 10){
+                $this->sendMessage($chat_id, "More than 10 items!");
+            }else{
+                $media = [];
+                foreach ($json as $key => $data){
+                    $dataType = "photo";
+                    if ($data->url[0]->type == "mp4"){
+                        $dataType = "video";
+                    }
+                    if ($dataType == "video"){
+                        if ($this->getFileSize($data->url[0]->url)<=20){
+                            $this->sendChatAction($chat_id, 'upload_video');
+                            $this->sendVideo($chat_id, $data->url[0]->url, ['caption' => $downTxt, 'parse_mode' => 'markdown', 'reply_to_message_id' => $message_id]);
+                        }else{
+                            $this->sendMessage($chat_id, "{$this->words($mainUser->lang, 'sizeLimit')}\n\n{$data->url[0]->url}");
+                        }
+                    }else{
+                        if ($key == 0){
+                            $media[] = [
+                                'type' => $dataType,
+                                'media' => $data->url[0]->url,
+                                'caption' => $downTxt,
+                                'parse_mode' => 'markdown',
+                            ];
+                        }else{
+                            $media[] = ['type' => $dataType,'media' => $data->url[0]->url,];
+                        }
+                    }
+                }
+                if (count($media)>1){
+                    $this->sendChatAction($chat_id, 'upload_photo');
+                    $this->bot('sendMediaGroup', [
+                        'chat_id' => $chat_id,
+                        'media' => json_encode($media)
+                    ]);
+                }
+                $this->sendMessage($chat_id, $data->meta->title."\n\n".$downTxt, ['parse_mode' => 'markdown']);
+            }
+        }elseif (gettype($json) == 'object'){
+            if (!isset($json->code)){
+                if (isset($json->url)){
+                    $url = $json->url[0];
+//                    $this->json(gettype($url));
+                    $fileType = $url->ext;
+                    if ($fileType == 'jpg'){
+                        $this->sendChatAction($chat_id, 'upload_photo');
+                        $this->sendPhoto($chat_id, $url->url, ['caption' => $downTxt, 'parse_mode' => 'markdown', 'reply_to_message_id' => $message_id]);
+                        $this->sendMessage($chat_id, $json->meta->title."\n\n".$downTxt, ['parse_mode' => 'markdown']);
+                    }
+                    elseif ($fileType == 'mp4'){
+                        if ($this->getFileSize($url->url)<=20){
+                            $this->sendChatAction($chat_id, 'upload_video');
+                            $this->sendVideo($chat_id, $url->url, ['caption' => $downTxt, 'parse_mode' => 'markdown', 'reply_to_message_id' => $message_id]);
+                            $this->sendMessage($chat_id, $json->meta->title."\n\n".$downTxt, ['parse_mode' => 'markdown']);
+                        }else{
+                            $this->sendMessage($chat_id, "{$this->words($mainUser->lang, 'sizeLimit')}\n\n{$url->url}");
+                        }
+                    }
+                    else{
+                        $this->json(gettype($json));
+                    }
+                }else{
+                    $this->sendMessage($chat_id, 'there was an unexpected error');
+                }
+            }else{
+                $this->json($json);
+            }
+        }
+        $this->deleteMessage($chat_id, $wait);
+
+    }
+    public function downloadAll($url)
+    {
+        $header    = array();
+        $header[]  = 'origin: https://videodownloaderpro.net';
+        $header[]  = 'referer: https://videodownloaderpro.net/';
+        $header[]  = 'cookie: PHPSESSID=4mdf8cprpesd9a9jp0e9ir28su';
+        $header[]  = 'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36';
+        $curl = curl_init();
+        $config = array(
+            CURLOPT_URL            => "https://api.videodownloaderpro.net/api/convert",
+            CURLOPT_POST           => true,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER     => $header,
+            CURLOPT_POSTFIELDS     => array(
+                'url'=>$url,
+            )
+        );
+
+        curl_setopt_array($curl, $config);
+        $response = curl_exec($curl);
+        curl_close($curl);
+        return $response;
     }
 
     public function mainBtn($user)
