@@ -291,6 +291,15 @@ class DownVidsBotController extends Controller
                     if(mb_stripos($text,"http")!==false){
                         if(mb_stripos($text,"tiktok.com/")!==false){
                             $this->sendchataction($chat_id, 'typing');
+                            if (isset($message->entities)){
+                                $entities = $message->entities;
+                                $array = json_decode(json_encode($entities, JSON_PRETTY_PRINT), true);
+                                $urlObjects = array_filter($array, function ($element) {
+                                    return isset($element['type']) && $element['type'] === 'url';
+                                });
+                                $text = substr($text, $urlObjects[0]['offset'], $urlObjects[0]['length']);
+                            }
+
 
                         }
 
