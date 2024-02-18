@@ -4,13 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Http\Traits\BotTrait;
 use App\Http\Traits\DataTrait;
+use App\Http\Traits\DownloadTrait;
 use App\Http\Traits\WordsTrait;
 use Illuminate\Http\Request;
 
 class DownVidsBotController extends Controller
 {
 
-    use BotTrait, WordsTrait, DataTrait;
+    use BotTrait, WordsTrait, DataTrait, DownloadTrait;
 
     public $usersModel = "App\Models\DVBUser";
     public $groupsModel = "App\Models\DVBGroup";
@@ -299,6 +300,22 @@ class DownVidsBotController extends Controller
                                 });
                                 $text = substr($text, $urlObjects[0]['offset'], $urlObjects[0]['length']);
                             }
+                            $checkTiktok = $this->checkTiktok($text);
+                            if (isset($checkTiktok->embed_product_id)){
+                                $response = $this->getUrlData($text);
+
+                                foreach ($response->medias as $media){
+                                    if ($media->type == 'video'){
+                                        $this->json($this->getVideoSize($media->url));
+                                        $this->sendVideo($chat_id,$media->url, ['caption'=>"$media->quality"]);
+                                    }
+                                }
+
+                                $this->json($response);
+                            }else{
+                                $this->sendMessage($chat_id, $this->words($lang, "checkLink"));
+                            }
+
 
 
                         }
