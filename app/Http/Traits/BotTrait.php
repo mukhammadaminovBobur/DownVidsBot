@@ -34,5 +34,110 @@ trait BotTrait
             ], $extra
         ));
     }
+    public function deleteMessage($chat_id, $message_ids = [])
+    {
+        if (gettype($message_ids) == "integer"){
+            $this->bot('deleteMessage', [
+                'chat_id' => $chat_id,
+                'message_id' => $message_ids,
+            ]);
+        }else{
+            foreach ($message_ids as $message_id){
+                $this->bot('deleteMessage', [
+                    'chat_id' => $chat_id,
+                    'message_id' => $message_id,
+                ]);
+            }
+        }
+    }
+    public function sendPhoto($chat_id, $photo, $extra = [])
+    {
+        return $this->bot('sendPhoto', array_merge(
+            [
+                'chat_id' => $chat_id,
+                'photo' => $photo,
+            ], $extra
+        ));
+    }
+    public function sendVideo($chat_id, $video, $extra = [])
+    {
+        return $this->bot('sendVideo', array_merge(
+            [
+                'chat_id' => $chat_id,
+                'video' => $video,
+            ], $extra
+        ));
+    }
+    public function sendAudio($chat_id, $audio, $extra = [])
+    {
+        return $this->bot('sendAudio', array_merge(
+            [
+                'chat_id' => $chat_id,
+                'audio' => $audio,
+            ], $extra
+        ));
+    }
+    public function sendChatAction($chat_id, $action)
+    {
+        return $this->bot('sendChatAction', [
+            'chat_id' => $chat_id,
+            'action' => $action,
+        ]);
+    }
+    public function answerCallbackQuery($callback_query_id, $text, $alert = false)
+    {
+        $this->bot('answerCallbackQuery', [
+            "callback_query_id" => $callback_query_id,
+            "text" => $text,
+            "show_alert" => $alert,
+        ]);
+    }
+
+    public function inlineKeyboard($array = [])
+    {
+        $keys = [];
+        foreach ($array as $arr){
+            $inKeys = [];
+            foreach ($arr as $ar){
+                $ex = explode('-', $ar);
+                $inKeys[] = ['text' => $ex[0], 'callback_data' => $ex[1]];
+            }
+            $keys[] = $inKeys;
+        }
+        return json_encode([
+            "inline_keyboard" => $keys
+        ]);
+    }
+    public function buttonKeyboard($array = [])
+    {
+        $keys = [];
+        foreach ($array as $arr){
+            $inKeys = [];
+            foreach ($arr as $ar){
+                $inKeys[] = ['text' => $ar];
+            }
+            $keys[] = $inKeys;
+        }
+        return json_encode([
+            "resize_keyboard" => true,
+            "keyboard" => $keys
+        ]);
+    }
+
+    public function json($update)
+    {
+        $longText = json_encode($update, JSON_PRETTY_PRINT);
+        if (strlen($longText) > 4096){
+            $textChunks = str_split($longText, 4096);
+            foreach ($textChunks as $textChunk){
+                $this->sendMessage($this->botDev, $textChunk);
+            }
+        }else{
+            $this->sendMessage($this->botDev, $longText);
+        }
+    }
+
+
+
 
 }
