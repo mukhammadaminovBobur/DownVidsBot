@@ -11,7 +11,7 @@ trait DownloadTrait
 
     public function getUrlData($url)
     {
-        $key = "bf587b0308msh5d356bcff04fa3ep1e3622jsn8677dce9292c";
+        $key = env('RAPID_KEY');
         $host = "social-download-all-in-one.p.rapidapi.com";
         $endpoint = "https://social-download-all-in-one.p.rapidapi.com/v1/social/autolink";
         return json_decode(Http::withHeaders([
@@ -39,11 +39,7 @@ trait DownloadTrait
             $sizeInKb = round($sizeInBytes / 1024, 2); // Size in kilobytes
             $sizeInMb = round($sizeInBytes / (1024 * 1024), 2); // Size in megabytes
 
-            return [
-                'bytes' => $sizeInBytes,
-                'kilobytes' => $sizeInKb,
-                'megabytes' => $sizeInMb,
-            ];
+            return $sizeInMb;
         }
 
         // If 'Content-Length' is not present in the headers, return null or handle it accordingly

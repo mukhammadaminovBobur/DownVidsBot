@@ -6,12 +6,11 @@ use Illuminate\Support\Facades\Http;
 trait BotTrait
 {
 
-    public $botToken = "5079517440:AAGIsVvzLIjDGuY52U_nvQ8pZ9XdVWAI9bQ";
-    public $botUser = "DownVidsBot";
-    public $botDev = "716294792";
+    public string $botUser = "DownVidsBot";
+    public string $botDev = "716294792";
 
     public function bot($method, $data = []){
-        $url = "https://api.telegram.org/bot".$this->botToken."/" . $method;
+        $url = "https://api.telegram.org/bot".env('BOT_TOKEN')."/" . $method;
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);

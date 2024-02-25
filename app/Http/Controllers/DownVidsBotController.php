@@ -7,6 +7,7 @@ use App\Http\Traits\DataTrait;
 use App\Http\Traits\DownloadTrait;
 use App\Http\Traits\WordsTrait;
 use Illuminate\Http\Request;
+use function PHPUnit\Framework\isNull;
 
 class DownVidsBotController extends Controller
 {
@@ -303,15 +304,72 @@ class DownVidsBotController extends Controller
                             $checkTiktok = $this->checkTiktok($text);
                             if (isset($checkTiktok->embed_product_id)){
                                 $response = $this->getUrlData($text);
+                                $isVideo = false;
+                                $mediaDescription = $response->title;
 
                                 foreach ($response->medias as $media){
                                     if ($media->type == 'video'){
-                                        $this->json($this->getVideoSize($media->url));
-                                        $this->sendVideo($chat_id,$media->url, ['caption'=>"$media->quality"]);
+                                        $isVideo = true;
+                                        break;
                                     }
                                 }
+                                if ($isVideo){
+                                    $videoMedia = null;
+                                    $isVideoOverSized = true;
+                                    $audioMedia = null;
+                                    foreach ($response->medias as $media){
+                                        if ($media->quality == 'hd_no_watermark'){
+                                            if ($this->getVideoSize($media->url) < 20){
+                                                $videoMedia = $media;
+                                                $isVideoOverSized = false;
+                                            }
+                                        }
+                                        if ($media->quality == 'no_watermark'){
+                                            if ($this->getVideoSize($media->url) < 20){
+                                                $videoMedia = $media;
+                                                $isVideoOverSized = false;
+                                            }
+                                        }
+                                        if ($media->type == 'audio'){
+                                            $audioMedia = $media;
+                                        }
+                                    }
+                                    if (!is_null($videoMedia)){
+                                        if ($isVideoOverSized){
+                                            $this->sendMessage($chat_id, $this->words($lang,'sizeLimit')."\n".$videoMedia->url, ['reply_to_message_id' => $message_id]);
+                                        }else{
+                                            $downloadText = $this->words($lang, 'downloadedWith');
+                                            $video_caption = $mediaDescription."\n".$downloadText;
+                                            $vmr = $this->sendVideo($chat_id, $videoMedia->url, [
+                                                'caption' => $video_caption,
+                                                'parse_mode' => "markdown",
+                                                'reply_to_message_id' => $message_id,
+                                            ]);
+                                            if (!$vmr->ok){
+                                                if ($vmr->error_code == 400){
+                                                    if (mb_stripos($vmr->description, "Bad Request: can't parse entities") !== false) {
+                                                        $int_var = (int)filter_var($vmr->description, FILTER_SANITIZE_NUMBER_INT);
+                                                        $video_caption = substr($video_caption, 0, $int_var - 5) . "...\n\n" . $downloadText;
+                                                        $this->sendVideo($chat_id, $videoMedia->url, [
+                                                            'parse_mode' => 'markdown',
+                                                            'caption' => $video_caption,
+                                                            'reply_to_message_id' => $message_id
+                                                        ]);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                    if (!is_null($audioMedia)){
+                                        $this->sendAudio($chat_id, $audioMedia->url, [
+                                            'caption' => $this->words($lang, 'downloadedWith'),
+                                            'parse_mode' => "markdown",
+                                            'reply_to_message_id' => $message_id,
+                                        ]);
+                                    }
 
-                                $this->json($response);
+
+                                }
                             }else{
                                 $this->sendMessage($chat_id, $this->words($lang, "checkLink"));
                             }
